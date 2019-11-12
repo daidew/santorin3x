@@ -1,6 +1,8 @@
 import numpy as np
 from collections import deque
-
+import seaborn as sns
+import matplotlib.pyplot as plt
+import matplotlib
 '''
 ========================================================================================
                                         READ ME
@@ -74,13 +76,38 @@ class Santorini:
         #history recorder
         for i in range(self.history_len): self.record_state()
 
-        return(self.get_state())
+        return(self.get_state()) 
+    
+    def print_board(self, mode=0):
+        '''
+        mode 0: print numpy array
         
-    def print_board(self):
-        print(f'Buildings:\n {self.board[0,:,:]}')
-        print(f'Workers:\n {self.board[1,:,:]}')
-        print(f'Parts:\n {self.board[2,:,:]}')
-        
+        mode 1: beautify the board using seaborn magic
+        '''
+        if mode == 0:
+            print(f'Buildings:\n {self.board[0,:,:]}')
+            print(f'Workers:\n {self.board[1,:,:]}')
+            print(f'Parts:\n {self.board[2,:,:]}')
+        elif mode == 1:
+            fig,ax = plt.subplots(1, 3, figsize=(13, 4))
+            fig.suptitle('Turn:{}'.format(self.turns))
+            ax[0].set_title('Buildings')
+            sns.heatmap(self.board[0,:,:],annot=True,yticklabels=False,xticklabels=False,
+                        annot_kws={'ha':'center','va':'center'},ax=ax[0],cbar=False,cmap='gray',
+                        linewidths=1,linecolor='white'
+                       )
+            ax[1].set_title('Workers')
+            sns.heatmap(self.board[1,:,:],yticklabels=False,xticklabels=False,
+                        annot=True,ax=ax[1],cbar=False,cmap='RdBu',
+                       linewidths=1,linecolor='white'
+                       )
+            ax[2].set_title('Parts')
+            sns.heatmap(self.board[2,:,:],yticklabels=False,xticklabels=False,
+                        annot=True,ax=ax[2],cbar=False,
+                       linewidths=1,linecolor='white'
+                       )
+            plt.show()
+            
     def get_buildings_layer(self):
         buildings_layer = self.board[0,:,:].copy()
         return(buildings_layer)
@@ -99,26 +126,16 @@ class Santorini:
         self.plus_worker2_layers.append(self.get_worker_layer(2))
     
     def get_state(self, no_parts= True):
-        buildings = np.array(self.buildings_layers)
-        minus_worker1 = np.array(self.minus_worker1_layers)
-        minus_worker2 = np.array(self.minus_worker2_layers)
-        plus_worker1 = np.array(self.plus_worker1_layers)
-        plus_worker2 = np.array(self.plus_worker2_layers)
-        current_player = np.ones((1,)+self.board_dim) * self.current_player
-        parts = self.board[2,:,:].copy()[None,:]
-        
-        if no_parts:
-            state = np.vstack([buildings,minus_worker1,minus_worker2,
-                               plus_worker1,plus_worker2,current_player])
-        else:
-            state = np.vstack([parts,buildings,minus_worker1,minus_worker2,
-                               plus_worker1,plus_worker2,current_player])
-        return(state)
-
+        '''
+        return whole board in numpy
+        '''
+        return self.board
+    
     def get_board_state(self, no_parts= True):
         #current player has negative workers; opposing player has positive workers
         sgn = -np.sign(self.current_player)
         state = self.board.copy()
+        #if current player is -1, then don't invert the board
         state[1,:,:]*=sgn
         if no_parts: state = state[:2,:,:]
         return(state)
@@ -219,7 +236,7 @@ class Santorini:
             self.build(worker,build_key)
         except:
             self.record_state()
-            if switch_player: self.current_player *= -1
+            if switch_player: self.current_player *= -1 
             next_state = self.get_state()
             reward += -1
             done = True
