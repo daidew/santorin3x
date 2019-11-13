@@ -72,6 +72,9 @@ target/
 # Jupyter Notebook
 .ipynb_checkpoints
 
+# Model weights
+.h5
+
 # pyenv
 .python-version
 
