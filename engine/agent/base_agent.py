@@ -10,12 +10,12 @@ class OneStepAgent():
     def step(self, env):
         #get what action to make
         a = self.policy.step(env)
-        
+
         #step on env
         s,r,done,current_player = env.step(a, switch_player=True)
         
         
-        return s,r,done,current_player
+        return s,a,r,done,current_player
     
         
     

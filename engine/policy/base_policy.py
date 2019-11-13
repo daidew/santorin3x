@@ -1,4 +1,3 @@
-from .policy import *
 from environment.environment import *
 import numpy as np
 
@@ -16,7 +15,9 @@ class RandomPolicy():
         '''
         #get legal moves for current player
         all_legal_moves = env.legal_moves()
-        
+        if len(all_legal_moves) == 0: #no legal moves available
+            return -1
+
         #convert all legal actions to action index
         all_legal_actions = []
         for legal_move in all_legal_moves:

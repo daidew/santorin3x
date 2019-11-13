@@ -90,10 +90,14 @@ class Santorini:
             print(f'Parts:\n {self.board[2,:,:]}')
         elif mode == 1:
             fig,ax = plt.subplots(1, 3, figsize=(13, 4))
-            fig.suptitle('Turn:{}'.format(self.turns))
+            if self.current_player == -1:
+                _player = 'Player 1'
+            else:
+                _player = 'Player 2'
+            fig.suptitle('Turn:{} ({} to move)'.format(self.turns, _player))
             ax[0].set_title('Buildings')
             sns.heatmap(self.board[0,:,:],annot=True,yticklabels=False,xticklabels=False,
-                        annot_kws={'ha':'center','va':'center'},ax=ax[0],cbar=False,cmap='gray',
+                        annot_kws={'ha':'center','va':'center'},ax=ax[0],cbar=False,
                         linewidths=1,linecolor='white'
                        )
             ax[1].set_title('Workers')
@@ -132,6 +136,9 @@ class Santorini:
         return self.board
     
     def get_board_state(self, no_parts= True):
+        '''
+        canonical board
+        '''
         #current player has negative workers; opposing player has positive workers
         sgn = -np.sign(self.current_player)
         state = self.board.copy()
@@ -142,7 +149,7 @@ class Santorini:
     
     def score(self):
         #get position of current player's workers
-        worker_idx = np.sign(self.get_board_state()[1,:,:])==-1
+        worker_idx = np.sign(self.get_board_state()[1,:,:]) == -1
         #check if workers at those positions are on top
         if (self.board[0,:,:][worker_idx] == self.winning_floor).any():
             reward = 1
@@ -225,10 +232,10 @@ class Santorini:
             self.move(worker,move_key)
         except:
             self.record_state()
-            if switch_player: self.current_player *= -1
             next_state = self.get_state()
             reward += -1
             done = True
+            if switch_player: self.current_player *= -1
             return(next_state,reward,done,self.current_player)
             
         #try to build
@@ -236,18 +243,18 @@ class Santorini:
             self.build(worker,build_key)
         except:
             self.record_state()
-            if switch_player: self.current_player *= -1 
             next_state = self.get_state()
             reward += -1
             done = True
+            if switch_player: self.current_player *= -1 
             return(next_state,reward,done,self.current_player)
         
         #move on
         self.record_state()
-        if switch_player: self.current_player *= -1
         next_state = self.get_state()
         reward += self.score()
         done = True if (self.score()==1) else False
+        if switch_player: self.current_player *= -1
         return(next_state,reward,done,self.current_player)
     
     def legal_moves(self):
