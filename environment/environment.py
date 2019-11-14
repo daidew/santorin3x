@@ -196,7 +196,7 @@ class Santorini:
         src = (worker_idx[0][0],worker_idx[1][0])
         worker_num = self.board[1,src[0], src[1]]
         delta = self.ktoc[key]
-        dest = (src[0]+delta[0],src[1]+delta[1])
+        dest = (src[0]+delta[0],src[1]+delta[1]) #destination of the new building
         
         #check tower size legality
         to_build = self.board[0,dest[0],dest[1]] + 1
@@ -216,9 +216,10 @@ class Santorini:
         if inbound & enough_parts & blank_tile:
             self.board[0,dest[0],dest[1]] = to_build
             self.board[2,to_build,to_build] -= 1
-        #if no parts left; do nothing
         elif inbound & (not enough_parts) & blank_tile:
-            pass
+            #if no parts left; do nothing 
+            # EDIT -> raise error to return score -1 instead of doing nothing to consider current player as losing the game
+            raise ValueError('Not enough parts')
         else:
             raise ValueError('Illegal Build')
                           
