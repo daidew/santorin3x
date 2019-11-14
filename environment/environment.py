@@ -51,7 +51,7 @@ class Santorini:
         self.action_dim = len(self.itoa)
         
         self.reset(board_dim, starting_parts)
-        self.state_dim = self.get_state().shape
+        self.state_dim = self.get_board().shape
 
     def reset(self, board_dim = (5,5), starting_parts=np.array([0,22,18,14,18])):        
         #turn counter
@@ -76,7 +76,7 @@ class Santorini:
         #history recorder
         for i in range(self.history_len): self.record_state()
 
-        return(self.get_state()) 
+        return(self.get_board()) 
     
     def print_board(self, mode=0):
         '''
@@ -129,13 +129,13 @@ class Santorini:
         self.plus_worker1_layers.append(self.get_worker_layer(1))
         self.plus_worker2_layers.append(self.get_worker_layer(2))
     
-    def get_state(self, no_parts= True):
+    def get_board(self, no_parts= True):
         '''
         return whole board in numpy
         '''
         return self.board
     
-    def get_board_state(self, no_parts= True):
+    def get_canonical_board(self, no_parts= False):
         '''
         canonical board
         '''
@@ -144,25 +144,28 @@ class Santorini:
         state = self.board.copy()
         #if current player is -1, then don't invert the board
         state[1,:,:]*=sgn
+        #if no_parts is True, remove the parts layer (last one)
         if no_parts: state = state[:2,:,:]
+
         return(state)
     
-    def get_converted_board():
+    def get_converted_board(self):
         '''
         This method converts dimension from [depth, row, col] to [row, col, depth] due to the reason that
         Conv2D layer currently supports only [row, col, depth] for non-gpu version.
         '''
-
         #get canonical board
-        board = get_board_state()
+        board = self.get_canonical_board()
         #convert from [depth, row, col] to [row, col, depth]
-        raise NotImplementedError()
+        converted_board = np.zeros(shape=board.T.shape)
+        for i in range(board.T.shape[0]):
+            converted_board[i] = board.T[:, i, :]
 
-        # return converted_board
+        return converted_board
 
     def score(self):
         #get position of current player's workers
-        worker_idx = np.sign(self.get_board_state()[1,:,:]) == -1
+        worker_idx = np.sign(self.get_canonical_board()[1,:,:]) == -1
         #check if workers at those positions are on top
         if (self.board[0,:,:][worker_idx] == self.winning_floor).any():
             reward = 1
@@ -175,7 +178,7 @@ class Santorini:
         if worker not in [-1,-2]: raise ValueError('Wrong Worker')
         
         #get source and destinations
-        state = self.get_board_state()
+        state = self.get_canonical_board()
         worker_idx = np.where(state[1,:,:]==worker)
         src = (worker_idx[0][0],worker_idx[1][0])
         worker_num = self.board[1,src[0], src[1]]
@@ -204,7 +207,7 @@ class Santorini:
         if worker not in [-1,-2]: raise ValueError('Wrong Worker')
         
         #get source and destinations
-        state = self.get_board_state()
+        state = self.get_canonical_board()
         worker_idx = np.where(state[1,:,:]==worker)
         src = (worker_idx[0][0],worker_idx[1][0])
         worker_num = self.board[1,src[0], src[1]]
@@ -246,7 +249,7 @@ class Santorini:
             self.move(worker,move_key)
         except:
             self.record_state()
-            next_state = self.get_state()
+            next_state = self.get_board()
             reward += -1
             done = True
             if switch_player: self.current_player *= -1
@@ -257,7 +260,7 @@ class Santorini:
             self.build(worker,build_key)
         except:
             self.record_state()
-            next_state = self.get_state()
+            next_state = self.get_board()
             reward += -1
             done = True
             if switch_player: self.current_player *= -1 
@@ -265,7 +268,7 @@ class Santorini:
         
         #move on
         self.record_state()
-        next_state = self.get_state()
+        next_state = self.get_board()
         reward += self.score()
         done = True if (self.score()==1) else False
         if switch_player: self.current_player *= -1

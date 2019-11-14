@@ -3,8 +3,8 @@ from tensorflow.keras.models import *
 from tensorflow.keras.layers import *
 import numpy as np 
 
-class DenseNetwork(Models, act_f='relu'):
-    def __init__(self, hidden_size):
+class DenseNetwork(Model):
+    def __init__(self, hidden_size, act_f='relu'):
         super(DenseNetwork, self).__init__()
         self.ly = []
         for hs in hidden_size:
@@ -16,12 +16,12 @@ class DenseNetwork(Models, act_f='relu'):
             x = f(x)
         return x
 
-class ConvolutionNetwork(Models, act_f='relu'):
-    def __init__(self):
+class ConvolutionNetwork(Model):
+    def __init__(self, act_f='relu'):
         super(ConvolutionNetwork, self).__init__()
         ly = []
-        ly.append(Conv2D(filters=, kernel_size=, strides=1, padding='same'))
-        ly.append(Conv2D)
+        # ly.append(Conv2D(filters=, kernel_size=, strides=1, padding='same'))
+        # ly.append(Conv2D)
 
 
     

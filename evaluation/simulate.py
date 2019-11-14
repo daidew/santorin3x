@@ -64,7 +64,7 @@ def simulate(n_eps, verbose=False):
                     env.print_board(mode=1)
                 
                 if r == 1:
-                    if current_player == -1: #already switched player so we consider previous player as winner
+                    if current_player == -1:
                         if verbose:
                             print('Player 1 Won')
                         winner.append(1)
