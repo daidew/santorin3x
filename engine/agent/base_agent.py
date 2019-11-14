@@ -14,8 +14,14 @@ class OneStepAgent():
         #step on env
         s,r,done,current_player = env.step(a, switch_player=True)
         
-        
         return s,a,r,done,current_player
     
+class NStepAgent():
+
+    def __init__():
+        raise NotImplementedError()
         
-    
+    def step(self, env):
+        raise NotImplementedError()
+
+
