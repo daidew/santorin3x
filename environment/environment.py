@@ -147,6 +147,19 @@ class Santorini:
         if no_parts: state = state[:2,:,:]
         return(state)
     
+    def get_converted_board():
+        '''
+        This method converts dimension from [depth, row, col] to [row, col, depth] due to the reason that
+        Conv2D layer currently supports only [row, col, depth] for non-gpu version.
+        '''
+
+        #get canonical board
+        board = get_board_state()
+        #convert from [depth, row, col] to [row, col, depth]
+        raise NotImplementedError()
+
+        # return converted_board
+
     def score(self):
         #get position of current player's workers
         worker_idx = np.sign(self.get_board_state()[1,:,:]) == -1

@@ -1,5 +1,5 @@
 import numpy as np
-
+from engine.network.neuralnet import *
 
 class OneStepAgent():
     
@@ -25,3 +25,14 @@ class NStepAgent():
         raise NotImplementedError()
 
 
+class DQNAgent():
+    
+    def __init__(self, lr=1e-4, tau=1e-3):
+        self.local_network = DenseNetwork([256])
+        self.target_network = DenseNetwork([256])
+        self.target_network.set_weights(self.local_network.get_weights())
+        self.lr = lr
+        self.tau = tau
+        
+    def step(self, env):
+        pass

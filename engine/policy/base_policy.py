@@ -54,3 +54,4 @@ class HumanPlayer():
                 print('You entered illegal moves. Please try again.')
             else:
                 return action_idx
+

@@ -43,8 +43,7 @@ def simulate(n_eps, verbose=False):
                 env.print_board(mode=1)
  
             if env.turns > 500: #must be bug
-                print('\nkl
-                Turn:{}, Score={}, Done={}, cur_player={} latest_action={}'.format(env.turns,env.score(),done,current_player,a))
+                print('\nTurn:{}, Score={}, Done={}, cur_player={} latest_action={}'.format(env.turns,env.score(),done,current_player,a))
                 env.print_board(mode=1)
                 raise ValueError('Exceed maximum turn')
 
