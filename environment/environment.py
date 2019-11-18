@@ -239,9 +239,11 @@ class Santorini:
         else:
             raise ValueError('Illegal Build')
                           
-    def step(self, action_idx, switch_player=True , move_reward = 0):
+    def step(self, action_idx, switch_player=True ,move_reward=0):
         self.turns+=1
         reward = move_reward
+        # if a is -1, then it would move the last action_idx which still results in illegal move
+        # then player would lose the game (which is OK)
         worker,move_key,build_key = self.itoa[action_idx]
         
         #try to move
