@@ -9,9 +9,9 @@ class DenseNetwork(Model):
         self.ly = []
         for hs in hidden_size:
             self.ly.append(Dense(hs, activation=act_f))
-        self.ly.append(Dense(1, activation='linear'))
+        self.ly.append(Dense(128, activation='softmax'))
 
-    def call(x):
+    def call(self, x):
         for f in self.ly:
             x = f(x)
         return x
