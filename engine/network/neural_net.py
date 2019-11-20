@@ -57,61 +57,44 @@ class MobileNetConv(Model):
             x = f(x)
         return x
 
-class ResNet19(Model):
-    def __init__(self):
-        super().__init__()
-        self.p_head = []
-        self.v_head = []
-        self.ly = []
+def get_resnet_k(k = 19):
+    '''
+    Return model with K ResNet Blocks
+    '''
 
-        self.ly += self._gen_conv_b()
-        for i in range(19):
-            if i == 15:
-                self.ly.append(MaxPooling2D(pool_size=2))
-            self.ly += self._gen_res_b()
-
-        self.p_head.append(Conv2D(filters=2, kernel_size=(1,1), strides=1, padding='same'))
-        self.p_head.append(Flatten())
-        self.p_head.append(BatchNormalization())
-        self.p_head.append(Activation('relu'))
-        self.p_head.append(Dense(128, activation='softmax'))
-
-        self.v_head.append(Conv2D(filters=2, kernel_size=(1,1), strides=1, padding='same'))
-        self.v_head.append(Flatten())
-        self.v_head.append(BatchNormalization())
-        self.v_head.append(Activation('relu'))
-        self.v_head.append(Dense(256))
-        self.v_head.append(Activation('relu'))
-        self.v_head.append(Dense(1, activation='tanh'))
-
-    def _gen_conv_b(self):
-        conv_b = []
-        conv_b.append(Conv2D(filters=256, kernel_size=(3,3), strides=1, padding='same'))
-        conv_b.append(BatchNormalization())
-        conv_b.append(Activation('relu'))
-        return conv_b
-
-    def _gen_res_b(self):
-        res_b = []
-        res_b += self._gen_conv_b()
-        res_b.append(BatchNormalization())
-        res_b.append(Activation('relu'))
-        return res_b
+    inp = Input(shape=(5,5,3))
     
-    def call(self, x):
-        for f in self.ly:
-            x = f(x)
-        x1 = x
-        x2 = x
+    #first conv block
+    x = Conv2D(filters=256, kernel_size=(3,3), strides=1, padding='same')(inp)
+    x = BatchNormalization()(x)
+    x = Activation('relu')(x)
 
-        for f in self.p_head:
-            x1 = f(x1)
-    
-        for f in self.v_head:
-            x2 = f(x2)
+    #resnet blocks (19?)
+    for i in range(k//2):
+        x = Conv2D(filters=256, kernel_size=(3,3), strides=1, padding='same')(x)
+        x = BatchNormalization()(x)
+        x = Activation('relu')(x)
+        x2 = Conv2D(filters=256, kernel_size=(3,3), strides=1, padding='same')(x)
+        x = x2 + x #residual
+        x = BatchNormalization()(x)
+        x = Activation('relu')(x)
+        if i == 4:
+            x = MaxPooling2D(pool_size=2)(x)
 
-        return [x1, x2]
+    p = Conv2D(filters=2, kernel_size=(1,1), strides=1, padding='same')(x)
+    p = Flatten()(p)
+    p = BatchNormalization()(p)
+    p = Activation('relu')(p)
+    p = Dense(128, activation='softmax')(p)
 
-    def get_model(self):
-        x = Input(shape=(5,5,3))
-        return Model(inputs=[x], outputs=self.call(x), name='ResNet19')
+    v = Conv2D(filters=2, kernel_size=(1,1), strides=1, padding='same')(x)
+    v = Flatten()(v)
+    v = BatchNormalization()(v)
+    v = Activation('relu')(v)
+    v = Dense(256, activation='relu')(v)
+    v = Dense(1, activation='tanh')(v)
+
+    return Model(inputs=[inp], outputs=[p, v], name='ResNet{}'.format(k))
+
+def get_VGG_k(k = 10):
+    raise NotImplementedError
