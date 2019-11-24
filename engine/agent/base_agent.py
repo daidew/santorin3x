@@ -38,8 +38,9 @@ class DQNAgent():
             # self.q_network.build(input_shape=(1,75))
             self.q_target_network = DenseNetwork([256])
             self.q_target_network.set_weights(self.q_network.get_weights())
-        elif mode == 'conv':
-            raise NotImplementedError()
+        # elif mode == 'conv':
+            # self.q_network = ConvolutionNetwork()
+            # self.
         self.lr = lr
         self.tau = tau
         self.eps = eps
@@ -186,3 +187,4 @@ class DQNAgent():
         self.eps *= self.eps_decay
         if self.eps < self.min_eps:
             self.eps = self.min_eps
+

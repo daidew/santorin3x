@@ -135,7 +135,7 @@ class Santorini:
         '''
         return self.board
     
-    def get_canonical_board(self, no_parts= False):
+    def get_canonical_board(self, no_parts=False):
         '''
         canonical board
         '''
@@ -240,6 +240,9 @@ class Santorini:
             raise ValueError('Illegal Build')
                           
     def step(self, action_idx, switch_player=True ,move_reward=0):
+        '''
+        If the game is over and the current_player wins, then we won't switch_player
+        '''
         self.turns+=1
         reward = move_reward
         # if a is -1, then it would move the last action_idx which still results in illegal move
@@ -254,9 +257,9 @@ class Santorini:
             next_state = self.get_board()
             reward += -1
             done = True
-            if switch_player: self.current_player *= -1
+            if switch_player and not done: self.current_player *= -1
             return(next_state,reward,done,self.current_player)
-            
+
         #try to build
         try:
             self.build(worker,build_key)
@@ -265,7 +268,7 @@ class Santorini:
             next_state = self.get_board()
             reward += -1
             done = True
-            if switch_player: self.current_player *= -1 
+            if switch_player and not done: self.current_player *= -1 
             return(next_state,reward,done,self.current_player)
         
         #move on
@@ -273,7 +276,7 @@ class Santorini:
         next_state = self.get_board()
         reward += self.score()
         done = True if (self.score()==1) else False
-        if switch_player: self.current_player *= -1
+        if switch_player and not done: self.current_player *= -1
         return(next_state,reward,done,self.current_player)
     
     def legal_moves(self):
@@ -302,3 +305,152 @@ class Santorini:
                 
             self.board = old_board
         return(legals)
+
+    def check_winner(self):
+        '''
+        Return 
+        -1: player1 won
+        0: not ended yet
+        1: player2 won
+        Should not have any draw scenario for this game.
+        '''
+        score = self.score()
+        legal = self.legal_moves()
+        if score:
+            return self.current_player
+        else:
+            if len(legal) == 0: #no more legal moves
+                return -self.current_player #another player win
+            else:
+                return 0
+
+class SantoriniGame():
+    '''
+    Interface to be used with alphazero code
+
+    NOTE: Santorini env consider player1 as -1, and player2 as 1 BUT alphazero implements consider player1 as 1, player2 as -1.
+    '''
+    def __init__(self):
+        self.env = Santorini()
+
+    def getInitBoard(self):
+        """
+        Returns:
+            startBoard: a representation of the board (ideally this is the form
+                        that will be the input to your neural network)
+        """
+        self.env.reset()
+        return env.get_converted_board()
+
+    def getBoardSize(self):
+        """
+        Returns:
+            (x,y): a tuple of board dimensions
+        """
+        return (5, 5)
+
+    def getActionSize(self):
+        """
+        Returns:
+            actionSize: number of all possible actions
+        """
+        return 128
+
+    def getNextState(self, board, player, action):
+        """
+        Input:
+            board: current board
+            player: current player (1 or -1)
+            action: action taken by current player
+        Returns:
+            nextBoard: board after applying action
+            nextPlayer: player who plays in the next turn (should be -player)
+        """
+        self.env.board = board
+        self.env.current_player = player
+        next_state, r, done, next_player = self.env.step(action, switch_player=True)
+        next_board = self.env.get_converted_board()
+
+        return next_board, next_player
+
+    def getValidMoves(self, board, player):
+        """
+        Input:
+            board: current board
+            player: current player
+        Returns:
+            validMoves: a binary vector of length self.getActionSize(), 1 for
+                        moves that are valid from the current board and player,
+                        0 for invalid moves
+        """
+        self.env.reset()
+        self.env.board = board
+        self.env.current_player = player
+        legal_moves = np.zeros(shape=(self.getActionSize(), 1))
+        legal_idx = self.env.legal_moves()
+        for _idx in legal_idx:
+            legal_moves[_idx] = 1
+        return legal_moves
+
+
+    def getGameEnded(self, board, player):
+        """
+        Input:
+            board: current board
+            player: current player (1 or -1)
+        Returns:
+            r: 0 if game has not ended. 1 if player won, -1 if player lost, (changed)
+               small non-zero value for draw.
+               
+        """
+        self.env.reset()
+        self.env.board = board
+        self.env.current_player = player
+        winner = self.env.check_winner()
+        #winner returns -1 if winner is player1
+        return -winner
+
+    def getCanonicalForm(self, board, player):
+        """
+        Input:
+            board: current board
+            player: current player (1 or -1)
+        Returns:
+            canonicalBoard: returns canonical form of board. The canonical form
+                            should be independent of player. For e.g. in chess,
+                            the canonical form can be chosen to be from the pov
+                            of white. When the player is white, we can return
+                            board as is. When the player is black, we can invert
+                            the colors and return the board.
+        """
+        self.env.reset()
+        self.env.board = board
+        self.env.current_player = player
+        return self.env.get_converted_board()
+
+    def getSymmetries(self, board, pi):
+        """
+        Input:
+            board: current board
+            pi: policy vector of size self.getActionSize()
+        Returns:
+            symmForms: a list of [(board,pi)] where each tuple is a symmetrical
+                       form of the board and the corresponding pi vector. This
+                       is used when training the neural network from examples.
+        """
+        return board, pi
+
+    def stringRepresentation(self, board):
+        """
+        Input:
+            board: current board
+        Returns:
+            boardString: a quick conversion of board to a string format.
+                         Required by MCTS for hashing.
+        """
+        _a = np.ravel(board).astype('int32')
+        st = ''
+        for num in _a:
+            st = st + str(num)
+
+        return st
