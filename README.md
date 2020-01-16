@@ -1,4 +1,4 @@
-# santorin3x
+# Santorin3x
 
 Santorini Board Game Deterministic Agent
 
